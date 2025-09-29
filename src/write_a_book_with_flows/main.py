@@ -120,11 +120,23 @@ def kickoff():
     BRAINTRUST_PARENT = os.environ["BRAINTRUST_PARENT"]
     BRAINTRUST_PROJECT_NAME = BRAINTRUST_PARENT.split(":")[1]
 
+    # Get environment from env var, default to 'DEV' if not set
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", "DEV")
+
     setup_tracing()
 
     tracer = trace.get_tracer(BRAINTRUST_PROJECT_NAME)
 
-    with tracer.start_as_current_span("crew_flow"):
+    with tracer.start_as_current_span("crew_flow") as span:
+        # Add environment metadata to the span
+        span.set_attributes(
+            {
+                "environment": ENVIRONMENT,
+            }
+        )
+
+        print(f"Starting BookFlow in {ENVIRONMENT} environment")
+
         poem_flow = BookFlow()
         poem_flow.kickoff()
 
