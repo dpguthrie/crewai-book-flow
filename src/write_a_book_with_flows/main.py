@@ -4,15 +4,16 @@ import os
 from typing import List
 
 from crewai.flow.flow import Flow, listen, start
-from opentelemetry import trace
 from pydantic import BaseModel
 
 from write_a_book_with_flows.crews.outline_book_crew.outline_crew import OutlineCrew
 from write_a_book_with_flows.crews.write_book_chapter_crew.write_book_chapter_crew import (
     WriteBookChapterCrew,
 )
-from write_a_book_with_flows.tracing import setup_tracing
+from write_a_book_with_flows.listeners.braintrust_listener import BraintrustListener
 from write_a_book_with_flows.types import Chapter, ChapterOutline
+
+braintrust_listener = BraintrustListener()
 
 
 class BookState(BaseModel):
@@ -24,10 +25,10 @@ class BookState(BaseModel):
         "Exploring the latest trends in AI across different industries as of July 2025"
     )
     goal: str = """
-        The goal of this book is to provide a comprehensive overview of the current state of artificial intelligence in July 2025.
+        The goal of this book is to provide an overview of the current state of artificial intelligence in July 2025.
         It will delve into the latest trends impacting various industries, analyze significant advancements,
         and discuss potential future developments. The book aims to inform readers about cutting-edge AI technologies
-        and prepare them for upcoming innovations in the field.
+        and prepare them for upcoming innovations in the field in less than or equal to 2 chapters.
     """
 
 
@@ -117,28 +118,15 @@ class BookFlow(Flow[BookState]):
 
 
 def kickoff():
-    BRAINTRUST_PARENT = os.environ["BRAINTRUST_PARENT"]
-    BRAINTRUST_PROJECT_NAME = BRAINTRUST_PARENT.split(":")[1]
-
     # Get environment from env var, default to 'DEV' if not set
     ENVIRONMENT = os.environ.get("ENVIRONMENT", "DEV")
 
-    setup_tracing()
+    print(f"Starting BookFlow in {ENVIRONMENT} environment")
 
-    tracer = trace.get_tracer(BRAINTRUST_PROJECT_NAME)
+    poem_flow = BookFlow()
+    poem_flow.kickoff()
 
-    with tracer.start_as_current_span("crew_flow") as span:
-        # Add environment metadata to the span
-        span.set_attributes(
-            {
-                "environment": ENVIRONMENT,
-            }
-        )
-
-        print(f"Starting BookFlow in {ENVIRONMENT} environment")
-
-        poem_flow = BookFlow()
-        poem_flow.kickoff()
+    return poem_flow
 
 
 def plot():
