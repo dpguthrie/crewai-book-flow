@@ -12,6 +12,7 @@ dependencies = [
     "opentelemetry-instrumentation-openai",
     "opentelemetry-instrumentation-crewai",
     "braintrust[otel]",
+    "wrapt",
 ]
 
 [project.scripts]

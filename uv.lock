@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10, <=3.13"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -4086,6 +4086,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-crewai" },
     { name = "opentelemetry-instrumentation-openai" },
     { name = "python-dotenv" },
+    { name = "wrapt" },
 ]
 
 [package.metadata]
@@ -4095,6 +4096,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-crewai" },
     { name = "opentelemetry-instrumentation-openai" },
     { name = "python-dotenv" },
+    { name = "wrapt" },
 ]
 
 [[package]]
