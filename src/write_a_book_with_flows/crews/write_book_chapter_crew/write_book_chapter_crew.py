@@ -1,4 +1,4 @@
-from crewai import Agent, Crew, Process, Task, LLM
+from crewai import LLM, Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import SerperDevTool
 
@@ -11,6 +11,7 @@ class WriteBookChapterCrew:
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
+    crew_name = "WriteBookChapterCrew"
     llm = LLM(model="gpt-4o")
 
     @agent
@@ -43,6 +44,7 @@ class WriteBookChapterCrew:
     def crew(self) -> Crew:
         """Creates the Write Book Chapter Crew"""
         return Crew(
+            name=self.crew_name,
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,

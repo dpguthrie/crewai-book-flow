@@ -11,6 +11,7 @@ class OutlineCrew:
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
+    crew_name = "OutlineCrew"
     llm = LLM(model="gpt-4o")
 
     @agent
@@ -47,6 +48,7 @@ class OutlineCrew:
     def crew(self) -> Crew:
         """Creates the Book Outline Crew"""
         return Crew(
+            name=self.crew_name,
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
