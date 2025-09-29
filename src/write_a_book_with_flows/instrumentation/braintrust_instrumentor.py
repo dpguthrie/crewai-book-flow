@@ -22,7 +22,6 @@ import inspect
 from typing import Any, Callable, Mapping, Optional, Tuple
 
 from braintrust.otel import BraintrustSpanProcessor
-from opentelemetry import context as context_api
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace import Status, StatusCode
@@ -135,8 +134,6 @@ class BraintrustInstrumentor:
         kwargs: Mapping[str, Any],
     ) -> Any:
         """Wrap Flow.kickoff_async to create the root span."""
-        if context_api.get_value(context_api._SUPPRESS_INSTRUMENTATION_KEY):
-            return wrapped(*args, **kwargs)
 
         flow_name = instance.name or instance.__class__.__name__
         span_name = f"Flow Execution: {flow_name}"
@@ -195,8 +192,7 @@ class BraintrustInstrumentor:
         # Call the original __init__ first to ensure the instance is initialized
         result = wrapped(*args, **kwargs)
 
-        if context_api.get_value(context_api._SUPPRESS_INSTRUMENTATION_KEY):
-            return result
+        # Note: We skip suppression check to allow child instrumentation to work
 
         # Get crew name from instance
         crew_name = getattr(instance, "name", "Crew")
@@ -226,8 +222,7 @@ class BraintrustInstrumentor:
         kwargs: Mapping[str, Any],
     ) -> Any:
         """Wrap Crew.kickoff to create crew-level spans."""
-        if context_api.get_value(context_api._SUPPRESS_INSTRUMENTATION_KEY):
-            return wrapped(*args, **kwargs)
+        # Note: We skip suppression check to allow child instrumentation (OpenAI) to work
 
         # Try to get crew name from various sources
         crew_name = (
@@ -272,8 +267,7 @@ class BraintrustInstrumentor:
         # Call the original __init__ first
         result = wrapped(*args, **kwargs)
 
-        if context_api.get_value(context_api._SUPPRESS_INSTRUMENTATION_KEY):
-            return result
+        # Note: We skip suppression check to allow child instrumentation to work
 
         # Get task name/description
         task_description = getattr(instance, "description", "Unknown Task")
@@ -304,8 +298,7 @@ class BraintrustInstrumentor:
         kwargs: Mapping[str, Any],
     ) -> Any:
         """Wrap Task._execute_core to create task-level spans."""
-        if context_api.get_value(context_api._SUPPRESS_INSTRUMENTATION_KEY):
-            return wrapped(*args, **kwargs)
+        # Note: We skip suppression check to allow child instrumentation (OpenAI) to work
 
         # Get task description for span name
         task_description = getattr(instance, "description", "Unknown Task")
@@ -350,8 +343,7 @@ class BraintrustInstrumentor:
         kwargs: Mapping[str, Any],
     ) -> Any:
         """Wrap ToolUsage._use to create tool-level spans."""
-        if context_api.get_value(context_api._SUPPRESS_INSTRUMENTATION_KEY):
-            return wrapped(*args, **kwargs)
+        # Note: We skip suppression check to allow child instrumentation to work
 
         # Get tool name from kwargs
         tool = kwargs.get("tool")

@@ -4,9 +4,8 @@ import os
 from typing import List
 
 from crewai.flow.flow import Flow, listen, start
-from pydantic import BaseModel
-
 from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+from pydantic import BaseModel
 
 from write_a_book_with_flows.crews.outline_book_crew.outline_crew import OutlineCrew
 from write_a_book_with_flows.crews.write_book_chapter_crew.write_book_chapter_crew import (
@@ -19,7 +18,7 @@ from write_a_book_with_flows.types import Chapter, ChapterOutline
 instrumentor = get_instrumentor()
 instrumentor.instrument()
 
-# Optionally instrument OpenAI calls
+# Instrument OpenAI calls with the same tracer provider
 OpenAIInstrumentor().instrument(tracer_provider=instrumentor.tracer_provider)
 
 
