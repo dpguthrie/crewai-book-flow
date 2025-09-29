@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10, <=3.13"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -2217,21 +2217,6 @@ wheels = [
 ]
 
 [[package]]
-name = "opentelemetry-instrumentation-crewai"
-version = "0.47.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-instrumentation" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "opentelemetry-semantic-conventions-ai" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6e/c7/64647122476b18cc17c460d137ddd89feca03df852ea8ba4924cbb6eee97/opentelemetry_instrumentation_crewai-0.47.3.tar.gz", hash = "sha256:80af9b6b92e95c729d3fcd5a9778f847538f8b7ce43c71497c20722ddaad3a5f", size = 4620, upload-time = "2025-09-21T12:12:45.993Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/bd/1d8b74abbf1bd3a124e47b4a2ec64e8bb1edf458e5db5cffd222ce413a21/opentelemetry_instrumentation_crewai-0.47.3-py3-none-any.whl", hash = "sha256:56b5283a8b4d6f7332b4aaca7165d14e64c175fccb0af0e671916da4f93a81cc", size = 6193, upload-time = "2025-09-21T12:12:06.595Z" },
-]
-
-[[package]]
 name = "opentelemetry-instrumentation-openai"
 version = "0.47.3"
 source = { registry = "https://pypi.org/simple" }
@@ -4083,7 +4068,6 @@ source = { editable = "." }
 dependencies = [
     { name = "braintrust", extra = ["otel"] },
     { name = "crewai", extra = ["tools"] },
-    { name = "opentelemetry-instrumentation-crewai" },
     { name = "opentelemetry-instrumentation-openai" },
     { name = "python-dotenv" },
     { name = "wrapt" },
@@ -4093,7 +4077,6 @@ dependencies = [
 requires-dist = [
     { name = "braintrust", extras = ["otel"] },
     { name = "crewai", extras = ["tools"], specifier = ">=0.152.0" },
-    { name = "opentelemetry-instrumentation-crewai" },
     { name = "opentelemetry-instrumentation-openai" },
     { name = "python-dotenv" },
     { name = "wrapt" },
