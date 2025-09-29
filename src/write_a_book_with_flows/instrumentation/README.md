@@ -61,19 +61,16 @@ CREWAI_DISABLE_TELEMETRY="true"
 The instrumentor wraps these CrewAI methods:
 
 - `Flow.kickoff_async` → Root flow execution span
-- `Crew.__init__` → Crew creation span
-- `Crew.kickoff` → Crew execution span
-- `Task.__init__` → Task creation span
+- `Crew.kickoff` → Crew execution span  
 - `Task._execute_core` → Task execution span
-- `ToolUsage._use` → Tool usage span
+- `ToolUsage._use` → Tool usage span (optional)
 
 ## Trace Structure
 
 ```
 Flow Execution: BookFlow
-├── Crew Created: OutlineCrew
 ├── Crew Execution: OutlineCrew
-│   ├── Task Created: Research the topic...
+│   ├── Task Execution: Research the topic...
 │   ├── Task Execution: Research the topic...
 │   │   ├── Tool: SerperDevTool
 │   │   └── LLM Call: gpt-4o (if OpenAI instrumented)

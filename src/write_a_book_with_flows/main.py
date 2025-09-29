@@ -3,6 +3,14 @@ import asyncio
 import os
 from typing import List
 
+# Load environment variables first
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
 from crewai.flow.flow import Flow, listen, start
 from opentelemetry.instrumentation.openai import OpenAIInstrumentor
 from pydantic import BaseModel

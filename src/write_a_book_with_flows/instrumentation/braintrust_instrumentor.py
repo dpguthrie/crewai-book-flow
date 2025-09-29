@@ -84,27 +84,10 @@ class BraintrustInstrumentor:
             wrapper=self._wrap_flow_kickoff,
         )
 
-        # Wrap Crew.__init__ to track crew creation
-        wrap_function_wrapper(
-            module="crewai.crew",
-            name="Crew.__init__",
-            wrapper=self._wrap_crew_init,
-        )
-
         # Wrap Crew.kickoff for crew execution
         wrap_function_wrapper(
             module="crewai.crew", name="Crew.kickoff", wrapper=self._wrap_crew_kickoff
         )
-
-        # Wrap Task.__init__ to track task creation
-        try:
-            wrap_function_wrapper(
-                module="crewai.task",
-                name="Task.__init__",
-                wrapper=self._wrap_task_init,
-            )
-        except Exception:
-            pass
 
         # Wrap Task._execute_core for task execution
         wrap_function_wrapper(
@@ -181,39 +164,6 @@ class BraintrustInstrumentor:
                 span.record_exception(e)
                 raise
 
-    def _wrap_crew_init(
-        self,
-        wrapped: Callable[..., Any],
-        instance: Any,
-        args: Tuple[Any, ...],
-        kwargs: Mapping[str, Any],
-    ) -> Any:
-        """Wrap Crew.__init__ to track crew creation."""
-        # Call the original __init__ first to ensure the instance is initialized
-        result = wrapped(*args, **kwargs)
-
-        # Note: We skip suppression check to allow child instrumentation to work
-
-        # Get crew name from instance
-        crew_name = getattr(instance, "name", "Crew")
-
-        span_name = f"Crew Created: {crew_name}"
-
-        with self.tracer.start_as_current_span(span_name) as span:
-            span.set_attribute("crew.name", crew_name)
-            span.set_attribute("event.type", "crew_created")
-
-            if hasattr(instance, "id"):
-                span.set_attribute("crew.id", str(instance.id))
-
-            if hasattr(instance, "process"):
-                span.set_attribute("crew.process", str(instance.process))
-
-            if hasattr(instance, "tasks"):
-                span.set_attribute("crew.task_count", len(instance.tasks))
-
-        return result
-
     def _wrap_crew_kickoff(
         self,
         wrapped: Callable[..., Any],
@@ -224,12 +174,8 @@ class BraintrustInstrumentor:
         """Wrap Crew.kickoff to create crew-level spans."""
         # Note: We skip suppression check to allow child instrumentation (OpenAI) to work
 
-        # Try to get crew name from various sources
-        crew_name = (
-            getattr(instance, "name", None)
-            or getattr(instance, "_crew_name", None)
-            or instance.__class__.__name__
-        )
+        # Try to get crew name from various sources - prioritize the 'name' attribute set in Crew constructor
+        crew_name = getattr(instance, "name", instance.__class__.__name__)
         span_name = f"Crew Execution: {crew_name}"
 
         with self.tracer.start_as_current_span(span_name) as span:
@@ -256,40 +202,6 @@ class BraintrustInstrumentor:
                 span.record_exception(e)
                 raise
 
-    def _wrap_task_init(
-        self,
-        wrapped: Callable[..., Any],
-        instance: Any,
-        args: Tuple[Any, ...],
-        kwargs: Mapping[str, Any],
-    ) -> Any:
-        """Wrap Task.__init__ to track task creation."""
-        # Call the original __init__ first
-        result = wrapped(*args, **kwargs)
-
-        # Note: We skip suppression check to allow child instrumentation to work
-
-        # Get task name/description
-        task_description = getattr(instance, "description", "Unknown Task")
-        task_name = (
-            task_description[:50] + "..."
-            if len(task_description) > 50
-            else task_description
-        )
-        span_name = f"Task Created: {task_name}"
-
-        with self.tracer.start_as_current_span(span_name) as span:
-            span.set_attribute("task.description", task_description)
-            span.set_attribute("event.type", "task_created")
-
-            if hasattr(instance, "id"):
-                span.set_attribute("task.id", str(instance.id))
-
-            if hasattr(instance, "expected_output"):
-                span.set_attribute("task.expected_output", instance.expected_output)
-
-        return result
-
     def _wrap_task_execute(
         self,
         wrapped: Callable[..., Any],
@@ -298,15 +210,25 @@ class BraintrustInstrumentor:
         kwargs: Mapping[str, Any],
     ) -> Any:
         """Wrap Task._execute_core to create task-level spans."""
-        # Note: We skip suppression check to allow child instrumentation (OpenAI) to work
+        # Get task name with better extraction logic
+        # Try to get a meaningful task name from various sources
+        task_name = None
 
-        # Get task description for span name
-        task_description = getattr(instance, "description", "Unknown Task")
-        task_name = (
-            task_description[:50] + "..."
-            if len(task_description) > 50
-            else task_description
-        )
+        # First try to get from task description and extract the main action
+        if hasattr(instance, "description") and instance.description:
+            desc = instance.description.strip()
+            # Take first sentence or first 50 chars, whichever is shorter
+            first_sentence = desc.split(".")[0].split("\n")[0]
+            task_name = (
+                first_sentence[:50]
+                if len(first_sentence) <= 50
+                else first_sentence[:50] + "..."
+            )
+
+        # Fallback to class name or generic
+        if not task_name:
+            task_name = getattr(instance, "__class__", type(instance)).__name__
+
         span_name = f"Task Execution: {task_name}"
 
         # Get agent from args or kwargs
@@ -314,17 +236,18 @@ class BraintrustInstrumentor:
         agent_role = getattr(agent, "role", "Unknown Agent") if agent else "No Agent"
 
         with self.tracer.start_as_current_span(span_name) as span:
-            span.set_attribute("task.description", task_description)
             span.set_attribute("event.type", "task_execution")
+            span.set_attribute("agent.role", agent_role)
+
+            # Add task details if available
+            if hasattr(instance, "description") and instance.description:
+                span.set_attribute("task.description", instance.description)
 
             if hasattr(instance, "id"):
                 span.set_attribute("task.id", str(instance.id))
 
             if hasattr(instance, "expected_output"):
                 span.set_attribute("task.expected_output", instance.expected_output)
-
-            # Add agent information
-            span.set_attribute("agent.role", agent_role)
 
             try:
                 result = wrapped(*args, **kwargs)
