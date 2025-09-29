@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 import asyncio
+import os
 from typing import List
 
 from crewai.flow.flow import Flow, listen, start
+from opentelemetry import trace
 from pydantic import BaseModel
 
+from write_a_book_with_flows.crews.outline_book_crew.outline_crew import OutlineCrew
 from write_a_book_with_flows.crews.write_book_chapter_crew.write_book_chapter_crew import (
     WriteBookChapterCrew,
 )
+from write_a_book_with_flows.tracing import setup_tracing
 from write_a_book_with_flows.types import Chapter, ChapterOutline
-
-from write_a_book_with_flows.crews.outline_book_crew.outline_crew import OutlineCrew
 
 
 class BookState(BaseModel):
@@ -115,8 +117,16 @@ class BookFlow(Flow[BookState]):
 
 
 def kickoff():
-    poem_flow = BookFlow()
-    poem_flow.kickoff()
+    BRAINTRUST_PARENT = os.environ["BRAINTRUST_PARENT"]
+    BRAINTRUST_PROJECT_NAME = BRAINTRUST_PARENT.split(":")[1]
+
+    setup_tracing()
+
+    tracer = trace.get_tracer(BRAINTRUST_PROJECT_NAME)
+
+    with tracer.start_as_current_span("crew_flow"):
+        poem_flow = BookFlow()
+        poem_flow.kickoff()
 
 
 def plot():
