@@ -22,6 +22,9 @@ from write_a_book_with_flows.crews.write_book_chapter_crew.write_book_chapter_cr
 from write_a_book_with_flows.instrumentation import get_instrumentor
 from write_a_book_with_flows.types import Chapter, ChapterOutline
 
+# Disabling CrewAI's built-in telemetry to prevent duplicate traces
+os.environ.setdefault("CREWAI_DISABLE_TELEMETRY", "true")
+
 # Initialize and instrument CrewAI with Braintrust tracing
 instrumentor = get_instrumentor()
 instrumentor.instrument()

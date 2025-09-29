@@ -10,7 +10,7 @@ dependencies = [
     "crewai[tools]>=0.152.0",
     "python-dotenv",
     "opentelemetry-instrumentation-openai",
-    "opentelemetry-instrumentation-crewai",
+    # NOTE: Removed "opentelemetry-instrumentation-crewai" - it conflicts with our custom instrumentor
     "braintrust[otel]",
     "wrapt",
 ]
