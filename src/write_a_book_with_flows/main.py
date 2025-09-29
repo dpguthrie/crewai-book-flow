@@ -6,14 +6,21 @@ from typing import List
 from crewai.flow.flow import Flow, listen, start
 from pydantic import BaseModel
 
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+
 from write_a_book_with_flows.crews.outline_book_crew.outline_crew import OutlineCrew
 from write_a_book_with_flows.crews.write_book_chapter_crew.write_book_chapter_crew import (
     WriteBookChapterCrew,
 )
-from write_a_book_with_flows.listeners.braintrust_listener import BraintrustListener
+from write_a_book_with_flows.instrumentation import get_instrumentor
 from write_a_book_with_flows.types import Chapter, ChapterOutline
 
-braintrust_listener = BraintrustListener()
+# Initialize and instrument CrewAI with Braintrust tracing
+instrumentor = get_instrumentor()
+instrumentor.instrument()
+
+# Optionally instrument OpenAI calls
+OpenAIInstrumentor().instrument(tracer_provider=instrumentor.tracer_provider)
 
 
 class BookState(BaseModel):
